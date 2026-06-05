@@ -1,0 +1,19 @@
+# debate run artifacts — may contain personal/proprietary content
+# (quotes from your source materials, paths, decisions). Debate definitions
+# (DEBATE-CONFIG.md, run.conf, prompts/, PROTOCOL.md) stay tracked.
+debates/*/exchange/
+debates/*/output/
+debates/*/human/
+debates/*/STATE.md
+
+# to keep entire debates private, use this instead:
+# debates/
+
+# if any of the above were committed before this rule existed:
+#   git rm -r --cached debates/*/exchange debates/*/output debates/*/human debates/*/STATE.md
+
+# generated per-machine launch scripts
+debates/*/.run/
+
+# OS noise
+.DS_Store

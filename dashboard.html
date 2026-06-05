@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Debate Arena — Live</title>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1d2129; --line:#2a2f3a;
+    --text:#e8eaf0; --muted:#9aa3b2; --dim:#6b7280;
+    --a:#4f9cf9; --a-soft:rgba(79,156,249,.13);
+    --b:#f2a93b; --b-soft:rgba(242,169,59,.13);
+    --m:#3ecf8e; --m-soft:rgba(62,207,142,.12);
+    --warn:#f87171; --gold:#ffd166;
+    --r:12px; --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+  a{color:var(--a)}
+  /* header */
+  header{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+         padding:12px 20px;background:rgba(15,17,21,.92);backdrop-filter:blur(8px);
+         border-bottom:1px solid var(--line)}
+  header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.2px}
+  header h1 span{color:var(--dim);font-weight:500}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;
+         font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--panel)}
+  .badge .dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
+  .badge.live .dot{background:var(--m);animation:pulse 1.6s infinite}
+  .badge.done .dot{background:var(--gold)}
+  .badge.stalled .dot{background:var(--warn)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .spacer{flex:1}
+  .hbtn{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:8px;
+        padding:5px 12px;font-size:12px;cursor:pointer}
+  .hbtn:hover{background:var(--panel2)}
+  #lastref{font-size:11px;color:var(--dim)}
+  /* layout */
+  .wrap{max-width:1480px;margin:0 auto;padding:18px 20px 60px}
+  /* question + awaiting */
+  #question{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+            padding:14px 18px;margin-bottom:14px}
+  #question .q{font-size:15px}
+  #question .q strong{color:var(--gold)}
+  #awaiting{margin-top:10px;font-size:13px;color:var(--muted)}
+  #awaiting .who{font-weight:700;padding:2px 8px;border-radius:6px;margin-right:4px}
+  .who.A{color:var(--a);background:var(--a-soft)} .who.B{color:var(--b);background:var(--b-soft)}
+  .who.M{color:var(--m);background:var(--m-soft)}
+  /* stepper */
+  #stepper{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px}
+  .step{flex:1;min-width:110px;background:var(--panel);border:1px solid var(--line);
+        border-radius:10px;padding:8px 10px;text-align:center;position:relative;opacity:.55}
+  .step .pn{font-size:11px;color:var(--dim);font-weight:700;letter-spacing:.6px}
+  .step .pl{font-size:12.5px;font-weight:600;margin-top:1px}
+  .step.done{opacity:1;border-color:#2f5d46}
+  .step.done .pn{color:var(--m)}
+  .step.cur{opacity:1;border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+  .step.cur .pn{color:var(--gold)}
+  .step .tick{position:absolute;top:6px;right:8px;font-size:11px;color:var(--m)}
+  /* columns */
+  .grid{display:grid;grid-template-columns:1fr 1.1fr 1fr;gap:14px}
+  @media(max-width:1100px){.grid{grid-template-columns:1fr}}
+  .col{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+       padding:14px;min-height:120px}
+  .col>h2{margin:0 0 2px;font-size:14px;display:flex;align-items:center;gap:8px}
+  .col .sub{font-size:12px;color:var(--muted);margin:0 0 12px}
+  .col.A>h2{color:var(--a)} .col.B>h2{color:var(--b)} .col.M>h2{color:var(--m)}
+  .rolechip{font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;letter-spacing:.5px}
+  .col.A .rolechip{background:var(--a-soft);color:var(--a)}
+  .col.B .rolechip{background:var(--b-soft);color:var(--b)}
+  .col.M .rolechip{background:var(--m-soft);color:var(--m)}
+  /* cards */
+  .card{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+        padding:10px 12px;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
+  .card:hover{border-color:#3d4452}
+  .card .top{display:flex;align-items:center;gap:8px}
+  .pchip{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:1px 7px;
+         border-radius:5px;background:#262b35;color:var(--muted)}
+  .card .name{font-weight:650;font-size:13px}
+  .card .meta{margin-left:auto;font-size:11px;color:var(--dim);white-space:nowrap}
+  .card .meta .ok{color:var(--m)} .card .meta .pend{color:var(--warn)}
+  .card .excerpt{font-size:12px;color:var(--muted);margin-top:6px;
+                 display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .capbar{height:3px;border-radius:2px;background:#262b35;margin-top:8px;overflow:hidden}
+  .capbar i{display:block;height:100%;background:var(--m)}
+  .capbar i.over{background:var(--warn)}
+  .empty{color:var(--dim);font-size:12.5px;font-style:italic;padding:8px 2px}
+  /* gate log */
+  #gatelog{margin-top:6px}
+  .gl{border-left:2px solid var(--m);padding:4px 10px;margin:0 0 8px;font-size:12px;color:var(--muted)}
+  .gl b{color:var(--text)}
+  /* output + inbox */
+  .panelrow{margin-top:14px;display:grid;grid-template-columns:2fr 1fr;gap:14px}
+  @media(max-width:1100px){.panelrow{grid-template-columns:1fr}}
+  #output,#inbox{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+  #output h2,#inbox h2{margin:0 0 10px;font-size:14px}
+  #output h2{color:var(--gold)}
+  #output .card{border-color:#5a4a1f}
+  .finalbanner{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:rgba(255,209,102,.08);
+               border:1px solid #5a4a1f;border-radius:10px;padding:10px 14px;margin-bottom:10px;
+               font-size:13.5px;font-weight:600}
+  .finalbanner a{color:var(--gold)}
+  .sup{color:var(--dim)}
+  .rawlink{color:var(--dim);text-decoration:none;margin-left:6px;font-size:12px}
+  .rawlink:hover{color:var(--text)}
+  #inbox pre{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:pre-wrap;
+             background:var(--panel2);border-radius:8px;padding:10px;max-height:180px;overflow:auto}
+  #inbox .hint{font-size:11.5px;color:var(--dim);margin-top:8px}
+  #inbox .hint code{font-family:var(--mono);background:var(--panel2);padding:1px 5px;border-radius:4px}
+  /* inbox composer */
+  #inboxtext{width:100%;min-height:64px;resize:vertical;background:var(--panel2);
+             border:1px solid var(--line);border-radius:8px;color:var(--text);
+             font:12.5px/1.5 inherit;padding:8px 10px;margin-top:10px}
+  #inboxtext:focus{outline:none;border-color:var(--m)}
+  .inboxrow{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}
+  .dirtoggle{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);
+             cursor:pointer;user-select:none}
+  .dirtoggle input{accent-color:var(--warn)}
+  .dirtoggle.on{color:var(--warn);font-weight:700}
+  #inboxsend{background:var(--m-soft);border:1px solid #2f5d46;color:var(--m);border-radius:8px;
+             padding:6px 16px;font-size:12.5px;font-weight:700;cursor:pointer}
+  #inboxsend:hover{background:rgba(62,207,142,.22)}
+  #inboxsend:disabled{opacity:.5;cursor:default}
+  #inboxstatus{font-size:11.5px;color:var(--dim)}
+  #inboxstatus.ok{color:var(--m)} #inboxstatus.err{color:var(--warn)}
+  /* modal */
+  #modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;z-index:100;
+         align-items:flex-start;justify-content:center;padding:4vh 16px}
+  #modal.open{display:flex}
+  #mbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:880px;
+        width:100%;max-height:92vh;display:flex;flex-direction:column}
+  #mhead{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line)}
+  #mhead .name{font-weight:700}
+  #mhead .meta{font-size:12px;color:var(--dim)}
+  #mclose{margin-left:auto}
+  #mbody{padding:8px 26px 26px;overflow:auto}
+  /* rendered markdown */
+  .md{font-size:13.5px}
+  .md h1{font-size:19px;border-bottom:1px solid var(--line);padding-bottom:6px}
+  .md h2{font-size:16px;margin-top:22px} .md h3{font-size:14px}
+  .md table{border-collapse:collapse;width:100%;font-size:12.5px;margin:10px 0}
+  .md th,.md td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+  .md th{background:var(--panel2)}
+  .md code{font-family:var(--mono);font-size:12px;background:var(--panel2);
+           padding:1px 5px;border-radius:4px}
+  .md pre code{display:block;padding:10px;overflow:auto}
+  .md blockquote{border-left:3px solid var(--gold);margin:10px 0;padding:2px 14px;color:var(--muted)}
+  #err{display:none;background:#3a1d1d;border:1px solid #6b2c2c;border-radius:10px;
+       padding:12px 16px;margin-bottom:14px;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚖️ Debate Arena <span id="slugname"></span></h1>
+  <span class="badge" id="phasebadge"><span class="dot"></span><span id="phasetext">loading…</span></span>
+  <span class="badge live" id="statusbadge"><span class="dot"></span><span id="statustext">…</span></span>
+  <span class="badge" id="extbadge" style="display:none"><span id="exttext"></span></span>
+  <div class="spacer"></div>
+  <span id="lastref"></span>
+  <button class="hbtn" id="pausebtn">⏸ pause</button>
+  <button class="hbtn" onclick="loadAll()">↻ refresh</button>
+</header>
+
+<div class="wrap">
+  <div id="err"></div>
+  <section id="question"><div class="q" id="qtext">Loading debate…</div>
+    <div id="awaiting"></div></section>
+  <nav id="stepper"></nav>
+  <main class="grid">
+    <div class="col A"><h2><span class="rolechip">A</span><span id="titleA">Advocate A</span></h2>
+      <p class="sub" id="subA"></p><div id="colA"></div></div>
+    <div class="col M"><h2><span class="rolechip">M</span>Moderator</h2>
+      <p class="sub" id="subM">Neutral loop controller — gates every phase</p>
+      <div id="colM"></div><h2 style="margin-top:16px;font-size:13px">Gate log</h2><div id="gatelog"></div></div>
+    <div class="col B"><h2><span class="rolechip">B</span><span id="titleB">Advocate B</span></h2>
+      <p class="sub" id="subB"></p><div id="colB"></div></div>
+  </main>
+  <div class="panelrow">
+    <section id="output"><h2>🏁 Output — Unified Vision</h2>
+      <div id="outbanner"></div><div id="outcards"></div></section>
+    <section id="inbox"><h2>👤 Human inbox</h2><pre id="inboxpre">…</pre>
+      <textarea id="inboxtext" placeholder="Note to the moderator… (read at every gate)"></textarea>
+      <div class="inboxrow">
+        <label class="dirtoggle" id="dirlabel"><input type="checkbox" id="inboxdir">
+          DIRECTIVE — binding</label>
+        <button id="inboxsend">Send to moderator</button>
+        <span id="inboxstatus"></span>
+      </div>
+      <div class="hint">Notes append to <code id="inboxpath">human/INBOX.md</code>; advisory unless
+      marked DIRECTIVE. The moderator reads the inbox at every gate.</div>
+    </section>
+  </div>
+</div>
+
+<div id="modal" onclick="if(event.target===this)closeModal()">
+  <div id="mbox">
+    <div id="mhead"><span class="pchip" id="mchip"></span><span class="name" id="mname"></span>
+      <span class="meta" id="mmeta"></span>
+      <a class="hbtn" id="mraw" target="_blank" style="margin-left:auto;text-decoration:none">open file ↗</a>
+      <button class="hbtn" id="mclose" onclick="closeModal()">✕ close</button></div>
+    <div id="mbody"><div class="md" id="mmd"></div></div>
+  </div>
+</div>
+
+<script>
+const Q = new URLSearchParams(location.search);
+const DEBATE = Q.get('debate') || 'wf3-vs-wf4';
+const BASE = `debates/${DEBATE}/`;
+const PHASES = [
+  ['P0','Brief'],['P1','Positions'],['P2','Rebuttals'],
+  ['P3','Steelman'],['P4','Convergence'],['P5','Synthesis']
+];
+const CAPS = {position:1200,rebuttal:1000,steelman:800,vision:1200,signoff:300};
+let paused=false, timer=null, fileCache={};
+
+document.getElementById('slugname').textContent = '· '+DEBATE;
+document.getElementById('inboxpath').textContent = `debates/${DEBATE}/human/INBOX.md`;
+document.getElementById('pausebtn').onclick = ()=>{
+  paused=!paused;
+  document.getElementById('pausebtn').textContent = paused?'▶ resume':'⏸ pause';
+};
+
+const bust = u => u + (u.includes('?')?'&':'?') + 't=' + Date.now();
+async function ftext(path){
+  const r = await fetch(bust(path),{cache:'no-store'});
+  if(!r.ok) throw new Error(r.status+' '+path);
+  return r.text();
+}
+async function flist(dir){ // parse python http.server autoindex
+  try{
+    const html = await ftext(dir);
+    return [...html.matchAll(/href="([^"?]+\.md)"/g)].map(m=>decodeURIComponent(m[1]))
+           .filter(n=>n.toLowerCase()!=='readme.md');
+  }catch(e){ return []; }
+}
+
+function parseState(t){
+  const g = (re)=>{const m=t.match(re);return m?m[1].trim():''};
+  const s = {
+    phase:+(g(/^phase:\s*(\d+)/m)||0),
+    phase_name:g(/^phase_name:\s*(.+)$/m),
+    status:g(/^status:\s*(\S+)/m),
+    notes:g(/^notes_for_participants:\s*"?(.+?)"?$/m),
+    ext:g(/^extension_phases_used:\s*(.+)$/m),
+    awaiting:[], gates:[]
+  };
+  const aw = t.match(/awaiting_files:\n((?:\s+-\s+.+\n?)*)/);
+  if(aw) s.awaiting = [...aw[1].matchAll(/-\s+(\S+)/g)].map(m=>m[1]);
+  const gl = t.match(/gate_log:\n((?:\s+-\s+.+\n?)*)/);
+  if(gl) s.gates = [...gl[1].matchAll(/-\s+"?(.+?)"?\s*$/gm)].map(m=>m[1]);
+  return s;
+}
+function stripMd(t){
+  return t.replace(/<!--[\s\S]*?-->/g,'').replace(/^#+\s.*$/gm,'')
+          .replace(/[*_`>|#-]/g,'').replace(/\[(.*?)\]\(.*?\)/g,'$1')
+          .replace(/\s+/g,' ').trim();
+}
+function fileMeta(name, content){
+  const m = name.match(/^P(\d+)-([ABM])-(.+)\.md$/i) || name.match(/^(UNIFIED.+)\.md$/i);
+  let phase=null, role='M', slug=name.replace(/\.md$/,'');
+  if(m && m.length===4){ phase=+m[1]; role=m[2].toUpperCase(); slug=m[3]; }
+  const words = stripMd(content).split(/\s+/).filter(Boolean).length;
+  const delivered = /<!--\s*END\b/i.test(content);
+  const cap = CAPS[Object.keys(CAPS).find(k=>slug.includes(k))]||null;
+  return {name, phase, role, slug, words, delivered, cap, content};
+}
+function card(f){
+  const pct = f.cap?Math.min(100,Math.round(f.words/f.cap*100)):null;
+  const ex = stripMd(f.content).slice(0,260);
+  const badge = f.badge ||
+    (f.delivered?'<span class="ok">✔ delivered</span>':'<span class="pend">✍ writing…</span>');
+  const raw = f.dir?`<a class="rawlink" href="${BASE+f.dir+f.name}" target="_blank"
+    title="open raw file" onclick="event.stopPropagation()">↗</a>`:'';
+  return `<div class="card" onclick="openModal('${f.name}')">
+    <div class="top">${f.phase!==null?`<span class="pchip">P${f.phase}</span>`:''}
+      <span class="name">${f.slug.replace(/-/g,' ')}</span>
+      <span class="meta">${f.words}w${f.cap?'/'+f.cap:''} · ${badge}${raw}</span></div>
+    <div class="excerpt">${ex}</div>
+    ${pct!==null?`<div class="capbar"><i class="${f.words>f.cap?'over':''}" style="width:${pct}%"></i></div>`:''}
+  </div>`;
+}
+function roleOf(path){ const m=path.match(/P\d+-([ABM])-/i); return m?m[1].toUpperCase():'M'; }
+
+async function loadAll(){
+  if(paused) return;
+  const err = document.getElementById('err');
+  try{
+    const [stateT, cfgT, exNames, outNames, inboxT] = await Promise.all([
+      ftext(BASE+'STATE.md'), ftext(BASE+'DEBATE-CONFIG.md'),
+      flist(BASE+'exchange/'), flist(BASE+'output/'), ftext(BASE+'human/INBOX.md').catch(()=>'' )
+    ]);
+    err.style.display='none';
+    const st = parseState(stateT);
+
+    // header badges
+    document.getElementById('phasetext').textContent =
+      `Phase ${st.phase} — ${st.phase_name||''}`;
+    const sb = document.getElementById('statusbadge');
+    document.getElementById('statustext').textContent = st.status;
+    sb.className = 'badge '+(st.status==='finalized'?'done':st.status==='halted'?'stalled':'live');
+    if(st.ext && !st.ext.startsWith('0')){
+      document.getElementById('extbadge').style.display='';
+      document.getElementById('exttext').textContent='extensions: '+st.ext;
+    }
+
+    // decision question
+    const qm = cfgT.match(/##\s*Decision question\s*\n+([\s\S]*?)(?=\n##\s)/i);
+    document.getElementById('qtext').innerHTML =
+      window.marked ? marked.parse(qm?qm[1].trim():'') : (qm?qm[1]:'');
+    // side titles
+    const champ = side=>{
+      const mm = cfgT.match(new RegExp(`##\\s*Side ${side}[\\s\\S]*?Champions:\\*\\*\\s*(.+)`,'i'));
+      return mm?mm[1].trim():'';
+    };
+    document.getElementById('subA').textContent = champ('A');
+    document.getElementById('subB').textContent = champ('B');
+
+    // awaiting banner
+    const aw = document.getElementById('awaiting');
+    if(st.status==='finalized'){
+      aw.innerHTML = '🏁 <b style="color:var(--gold)">Debate finalized.</b> See Unified Vision below.';
+    } else if(st.awaiting.length){
+      const missing = [];
+      for(const p of st.awaiting){
+        const nm = p.split('/').pop();
+        const have = exNames.includes(nm);
+        if(!have) missing.push(`<span class="who ${roleOf(nm)}">${roleOf(nm)}</span>${nm}`);
+      }
+      aw.innerHTML = missing.length
+        ? '⏳ waiting on: '+missing.join(' &nbsp; ')
+        : '⏳ all awaited files delivered — <span class="who M">M</span> gate pending'+
+          (st.notes?` &nbsp;·&nbsp; <i>${st.notes}</i>`:'');
+    } else aw.innerHTML = st.notes?`<i>${st.notes}</i>`:'';
+
+    // fetch all artifact contents (cached by name+size would be nicer; simple: refetch)
+    const exFiles=[];
+    for(const n of exNames){ try{ const f=fileMeta(n, await ftext(BASE+'exchange/'+n));
+      f.dir='exchange/'; exFiles.push(f); }catch(e){} }
+    fileCache = {}; exFiles.forEach(f=>fileCache[f.name]={...f});
+    const outFiles=[];
+    for(const n of outNames){ try{ const f=fileMeta(n, await ftext(BASE+'output/'+n));
+      f.dir='output/'; outFiles.push(f); fileCache[f.name]={...f};}catch(e){} }
+
+    // output status: end markers are an exchange/ convention (PROTOCOL §3) — output
+    // docs are judged by debate state instead.
+    const finalized = st.status==='finalized';
+    const hasFinal = outFiles.some(f=>f.name.toLowerCase()==='unified-vision.md');
+    outFiles.forEach(f=>{
+      const isFinal = f.name.toLowerCase()==='unified-vision.md';
+      const isDraft = /draft/i.test(f.name);
+      if(isFinal && (finalized||f.delivered)) f.badge='<span class="ok">★ final</span>';
+      else if(isDraft && hasFinal) f.badge='<span class="sup">superseded by final</span>';
+      else if(finalized||f.delivered) f.badge='<span class="ok">✔ complete</span>';
+      else f.badge='<span class="pend">✍ in progress…</span>';
+    });
+    const finalDoc = outFiles.find(f=>f.name.toLowerCase()==='unified-vision.md');
+    document.getElementById('outbanner').innerHTML =
+      (finalDoc && (finalized||finalDoc.delivered))
+        ? `<div class="finalbanner">🏆 Unified Vision is ready —
+            <a href="#" onclick="openModal('${finalDoc.name}');return false">read it here</a>
+            <a href="${BASE}output/${finalDoc.name}" target="_blank">open raw file ↗</a></div>`
+        : '';
+
+    // stepper
+    const maxPhase = Math.max(st.phase, ...exFiles.map(f=>f.phase??0));
+    document.getElementById('stepper').innerHTML = PHASES.map(([pn,pl],i)=>{
+      const extra = (i===5 && maxPhase>5) ? ` (P${maxPhase})` : '';
+      const cls = st.status==='finalized' ? 'done'
+        : i<st.phase ? 'done' : i===st.phase||(i===5&&st.phase>5) ? 'cur' : '';
+      return `<div class="step ${cls}"><div class="pn">${pn}${extra}</div><div class="pl">${pl}</div>
+        ${cls==='done'?'<span class="tick">✔</span>':''}</div>`;
+    }).join('');
+
+    // columns, sorted by phase
+    const by = r => exFiles.filter(f=>f.role===r).sort((a,b)=>(b.phase??0)-(a.phase??0));
+    const fill=(id,arr,emptyMsg)=>{document.getElementById(id).innerHTML =
+      arr.length?arr.map(card).join(''):`<div class="empty">${emptyMsg}</div>`;};
+    fill('colA', by('A'), 'No artifacts yet — preparing…');
+    fill('colB', by('B'), 'No artifacts yet — preparing…');
+    fill('colM', by('M'), 'No moderator artifacts yet…');
+
+    // gate log (newest first)
+    document.getElementById('gatelog').innerHTML =
+      st.gates.length ? st.gates.slice().reverse().map(g=>{
+        const b=g.match(/^(G\d+[^:]*):?\s*(.*)$/);
+        return `<div class="gl"><b>${b?b[1]:''}</b> ${b?b[2]:g}</div>`;
+      }).join('') : '<div class="empty">No gates run yet.</div>';
+
+    // output
+    document.getElementById('outcards').innerHTML =
+      outFiles.length?outFiles.map(card).join(''):
+      '<div class="empty">Appears at P5 — the single agreed vision: chosen base + improvement backlog.</div>';
+
+    // inbox
+    document.getElementById('inboxpre').textContent =
+      inboxT.trim().split('\n').slice(-12).join('\n')||'(empty)';
+
+    document.getElementById('lastref').textContent =
+      'updated '+new Date().toLocaleTimeString();
+  }catch(e){
+    err.style.display='block';
+    err.innerHTML = `Can't load <code>${BASE}</code> — ${e.message}.<br>
+      Run the server from the arena root: <code>./bin/serve.sh ${DEBATE}</code>, then open
+      <code>http://localhost:8787/dashboard.html?debate=${DEBATE}</code>`;
+  }
+}
+
+// ── human inbox composer ──
+const inboxText = document.getElementById('inboxtext');
+const inboxDir  = document.getElementById('inboxdir');
+const inboxBtn  = document.getElementById('inboxsend');
+const inboxStat = document.getElementById('inboxstatus');
+inboxDir.onchange = ()=> document.getElementById('dirlabel').classList.toggle('on', inboxDir.checked);
+async function sendInbox(){
+  const text = inboxText.value.trim();
+  if(!text){ inboxStat.className='err'; inboxStat.textContent='nothing to send'; return; }
+  inboxBtn.disabled = true; inboxStat.className=''; inboxStat.textContent='sending…';
+  try{
+    const r = await fetch(`/api/inbox?debate=${encodeURIComponent(DEBATE)}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text, directive: inboxDir.checked})
+    });
+    const j = await r.json().catch(()=>({ok:false,error:r.status}));
+    if(j.ok){
+      inboxStat.className='ok';
+      inboxStat.textContent = (inboxDir.checked?'DIRECTIVE':'note')+' delivered ✔';
+      inboxText.value=''; inboxDir.checked=false;
+      document.getElementById('dirlabel').classList.remove('on');
+      setTimeout(loadAll, 400);
+    } else throw new Error(j.error||'server refused');
+  }catch(e){
+    inboxStat.className='err';
+    inboxStat.textContent = `failed (${e.message}) — restart ./bin/serve.sh (needs serve.py)`;
+  }finally{ inboxBtn.disabled=false; setTimeout(()=>{inboxStat.textContent='';},6000); }
+}
+inboxBtn.onclick = sendInbox;
+inboxText.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='Enter') sendInbox();
+});
+
+function openModal(name){
+  const f = fileCache[name]; if(!f) return;
+  document.getElementById('mchip').textContent = f.phase!==null?`P${f.phase}-${f.role}`:'OUT';
+  document.getElementById('mname').textContent = f.name;
+  document.getElementById('mmeta').textContent = `${f.words} words${f.cap?' / cap '+f.cap:''}`;
+  document.getElementById('mraw').href = f.dir ? BASE+f.dir+f.name : '#';
+  document.getElementById('mmd').innerHTML =
+    window.marked ? marked.parse(f.content.replace(/<!--[\s\S]*?-->/g,''))
+                  : `<pre>${f.content.replace(/</g,'&lt;')}</pre>`;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+loadAll();
+timer = setInterval(()=>{ if(!document.hidden) loadAll(); }, 10000);
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+# run.conf — per-role session config, sourced by bin/run-debate.sh (bash syntax)
+# ENGINE: claude | codex | ollama
+#   ollama = local model via `codex --oss` (requires `ollama serve` running and
+#   the model pulled). Edit by hand, or use the casting dialog in run-debate.sh
+# (press 'c' at launch, or pass --configure) — it rewrites only the 9 role keys.
+
+# ─ Advocate A ─────────────────────────────────────────────
+A_ENGINE=codex
+A_MODEL=gpt-5.5
+A_FLAGS='-c model_reasoning_effort="xhigh"'
+
+# ─ Advocate B ─────────────────────────────────────────────
+B_ENGINE=claude
+B_MODEL=opus
+B_FLAGS=''
+
+# ─ Moderator ──────────────────────────────────────────────
+M_ENGINE=claude
+M_MODEL=opus
+M_FLAGS=''
+
+# ─ Shared ─────────────────────────────────────────────────
+# Space-separated dirs with source materials (claude gets --add-dir for each;
+# codex reads them via its sandbox policy).
+MATERIALS_DIRS=""
+
+# Flags added to every session of that engine.
+# Claude: acceptEdits auto-approves file writes; add --dangerously-skip-permissions
+#         for fully unattended runs (your repo, your call).
+# Codex:  workspace-write allows writes in the debate dir, reads elsewhere;
+#         add: -a never  for fully unattended runs.
+CLAUDE_COMMON_FLAGS='--permission-mode acceptEdits'
+CODEX_COMMON_FLAGS='--sandbox workspace-write'
+
+# Dashboard port
+DASH_PORT=8787
