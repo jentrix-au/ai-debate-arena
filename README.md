@@ -82,8 +82,8 @@ internet it degrades to plain-text view.
 ## Install
 
 ```bash
-git clone <your-remote>/debate-arena.git
-cd debate-arena
+git clone https://github.com/jentrix-au/ai-debate-arena.git
+cd ai-debate-arena
 chmod +x bin/*.sh        # only needed if the clone lost exec bits
 ```
 
