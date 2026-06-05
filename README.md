@@ -91,6 +91,16 @@ No build step, no package install — scripts are bash + Python stdlib.
 
 ## Configure a debate
 
+**Easiest — the dashboard wizard:** start the server (`./bin/serve.sh`), open the
+dashboard, click **✚ New debate**. Six steps: basics (title/slug/decision question) →
+sides (identity, champions, optional extra instructions per side) → materials (absolute
+paths with live exists-on-disk validation) → criteria (weights with a Σ=100 check) →
+casting (per-role presets incl. ollama) → review of the exact generated files. Finish
+with **🚀 Launch sessions now** straight from the browser, or copy the terminal command.
+A header dropdown switches between debates.
+
+**Or from the CLI:**
+
 ```bash
 ./bin/new-debate.sh my-topic        # scaffolds debates/my-topic/
 ```
@@ -185,10 +195,12 @@ moderator's gates between them, word-count-vs-cap bars, gate log, output section
 ready banner + raw-file links once `UNIFIED-VISION.md` exists. Click any card to read
 the full rendered document. Auto-refreshes every 10s.
 
-Artifacts are read-only in the browser; the one writable thing is the **Human inbox**
-composer — it appends notes to `human/INBOX.md` (advisory, or binding with the
-DIRECTIVE toggle; ⌘/Ctrl+Enter sends) via a localhost-only endpoint in `bin/serve.py`.
-Editing the file directly works too. The moderator reads the inbox at every gate.
+Debate artifacts are read-only in the browser. The interactive parts, all backed by
+localhost-only endpoints in `bin/serve.py`: the **Human inbox** composer (appends to
+`human/INBOX.md` — advisory, or binding with the DIRECTIVE toggle; ⌘/Ctrl+Enter sends;
+the moderator reads it at every gate), the **✚ New debate** wizard (scaffolds and writes
+configs server-side), the **debate switcher** dropdown, and **🚀 Launch** (fire-and-forget
+`run-debate.sh`; tmux runs detached — attach with `tmux attach -t debate-<slug>`).
 
 ## Relay fallback (no autopilot)
 

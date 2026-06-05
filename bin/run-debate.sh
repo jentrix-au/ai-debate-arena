@@ -255,8 +255,10 @@ if command -v tmux >/dev/null 2>&1; then
   ( sleep 2; command -v open >/dev/null && open "$URL" ) >/dev/null 2>&1 &
   if [ -n "${TMUX:-}" ]; then
     echo "Already inside tmux — switch with: tmux switch-client -t $s"
-  else
+  elif [ -t 1 ]; then
     exec tmux attach -t "$s"
+  else
+    echo "Session '$s' running detached — attach with: tmux attach -t $s"
   fi
 
 # ── macOS Terminal path: positional prompt + clipboard fallback ──

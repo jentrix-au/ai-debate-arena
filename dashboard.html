@@ -149,11 +149,60 @@
   .md blockquote{border-left:3px solid var(--gold);margin:10px 0;padding:2px 14px;color:var(--muted)}
   #err{display:none;background:#3a1d1d;border:1px solid #6b2c2c;border-radius:10px;
        padding:12px 16px;margin-bottom:14px;font-size:13px}
+  /* debate switcher */
+  #debatesel{background:var(--panel);border:1px solid var(--line);color:var(--text);
+             border-radius:8px;padding:5px 8px;font-size:12.5px;max-width:260px}
+  .hbtn.primary{background:var(--m-soft);border-color:#2f5d46;color:var(--m);font-weight:700}
+  /* wizard */
+  #wizard{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;z-index:120;
+          align-items:flex-start;justify-content:center;padding:4vh 16px}
+  #wizard.open{display:flex}
+  #wbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;width:100%;
+        max-width:820px;max-height:92vh;display:flex;flex-direction:column}
+  #whead{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line)}
+  #whead h3{margin:0;font-size:15px}
+  .wdots{display:flex;gap:5px;margin-left:8px}
+  .wdot{width:8px;height:8px;border-radius:50%;background:#2a2f3a}
+  .wdot.cur{background:var(--gold)} .wdot.done{background:var(--m)}
+  #wstep{padding:16px 22px;overflow:auto;flex:1}
+  #wstep h4{margin:0 0 4px;font-size:14px;color:var(--gold)}
+  #wstep .whint{font-size:12px;color:var(--muted);margin:0 0 14px}
+  #wstep label.f{display:block;font-size:12px;color:var(--muted);margin:12px 0 4px;font-weight:600}
+  #wstep input[type=text],#wstep input[type=number],#wstep select,#wstep textarea{
+    width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;
+    color:var(--text);font:12.5px/1.5 inherit;padding:7px 10px}
+  #wstep textarea{min-height:60px;resize:vertical}
+  #wstep input:focus,#wstep textarea:focus,#wstep select:focus{outline:none;border-color:var(--m)}
+  .wgrid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.wgrid2{grid-template-columns:1fr}}
+  .sidebox{border:1px solid var(--line);border-radius:10px;padding:12px}
+  .sidebox.A{border-left:3px solid var(--a)} .sidebox.B{border-left:3px solid var(--b)}
+  .matrow,.critrow{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .matrow input.mpath{flex:2.2} .matrow input.mdesc{flex:1.6} .matrow select{flex:.7;width:auto}
+  .critrow input.cname{flex:3} .critrow input.cw{flex:.6;width:auto}
+  .vstat{font-size:11px;white-space:nowrap;min-width:86px}
+  .vstat.ok{color:var(--m)} .vstat.bad{color:var(--warn)} .vstat.unk{color:var(--dim)}
+  .xbtn{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px;padding:2px 6px}
+  .xbtn:hover{color:var(--warn)}
+  .addbtn{background:var(--panel2);border:1px dashed var(--line);color:var(--muted);
+          border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;margin-top:2px}
+  .sumbadge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--panel2)}
+  .sumbadge.ok{color:var(--m)} .sumbadge.bad{color:var(--warn)}
+  .castrow{display:grid;grid-template-columns:110px 1fr 1fr 1.4fr;gap:8px;align-items:center;margin-bottom:8px}
+  .castrow .rl{font-size:12.5px;font-weight:700}
+  pre.preview{font-family:var(--mono);font-size:11px;background:var(--panel2);border:1px solid var(--line);
+              border-radius:8px;padding:10px;max-height:220px;overflow:auto;white-space:pre-wrap}
+  #wfoot{display:flex;align-items:center;gap:10px;padding:12px 20px;border-top:1px solid var(--line)}
+  #wmsg{font-size:12px;color:var(--warn);flex:1}
+  .launchok{background:var(--m-soft);border:1px solid #2f5d46;border-radius:10px;
+            padding:12px 16px;font-size:13px;margin-top:12px}
 </style>
 </head>
 <body>
 <header>
-  <h1>⚖️ Debate Arena <span id="slugname"></span></h1>
+  <h1>⚖️ Debate Arena</h1>
+  <select id="debatesel" title="switch debate"><option id="slugname"></option></select>
+  <button class="hbtn primary" onclick="openWizard()">✚ New debate</button>
   <span class="badge" id="phasebadge"><span class="dot"></span><span id="phasetext">loading…</span></span>
   <span class="badge live" id="statusbadge"><span class="dot"></span><span id="statustext">…</span></span>
   <span class="badge" id="extbadge" style="display:none"><span id="exttext"></span></span>
@@ -194,6 +243,17 @@
   </div>
 </div>
 
+<div id="wizard">
+  <div id="wbox">
+    <div id="whead"><h3>✚ New debate</h3><div class="wdots" id="wdots"></div>
+      <div class="spacer"></div><button class="hbtn" onclick="closeWizard()">✕ close</button></div>
+    <div id="wstep"></div>
+    <div id="wfoot"><span id="wmsg"></span>
+      <button class="hbtn" id="wback">← Back</button>
+      <button class="hbtn primary" id="wnext">Next →</button></div>
+  </div>
+</div>
+
 <div id="modal" onclick="if(event.target===this)closeModal()">
   <div id="mbox">
     <div id="mhead"><span class="pchip" id="mchip"></span><span class="name" id="mname"></span>
@@ -215,8 +275,24 @@ const PHASES = [
 const CAPS = {position:1200,rebuttal:1000,steelman:800,vision:1200,signoff:300};
 let paused=false, timer=null, fileCache={};
 
-document.getElementById('slugname').textContent = '· '+DEBATE;
+document.getElementById('slugname').textContent = DEBATE;
 document.getElementById('inboxpath').textContent = `debates/${DEBATE}/human/INBOX.md`;
+
+async function initSwitcher(){
+  try{
+    const r = await fetch(bust('/api/debates')); const j = await r.json();
+    if(!j.ok) return;
+    if(!j.debates.length){ openWizard(); return; }
+    if(!Q.get('debate') && !j.debates.some(d=>d.slug===DEBATE)){
+      location.search='?debate='+encodeURIComponent(j.debates[0].slug); return;
+    }
+    const sel=document.getElementById('debatesel');
+    sel.innerHTML=j.debates.map(d=>
+      `<option value="${d.slug}" ${d.slug===DEBATE?'selected':''}>${d.slug} · ${d.final?'final':('P'+d.phase+' '+d.status)}</option>`).join('');
+    sel.onchange=()=>location.search='?debate='+encodeURIComponent(sel.value);
+  }catch(e){}
+}
+initSwitcher();
 document.getElementById('pausebtn').onclick = ()=>{
   paused=!paused;
   document.getElementById('pausebtn').textContent = paused?'▶ resume':'⏸ pause';
@@ -456,6 +532,314 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 
 loadAll();
 timer = setInterval(()=>{ if(!document.hidden) loadAll(); }, 10000);
+
+// ════════════════ NEW-DEBATE WIZARD ════════════════
+const PRESETS = [
+  {id:'claude-opus',  label:'Claude · opus',            engine:'claude', model:'opus',   flags:''},
+  {id:'claude-sonnet',label:'Claude · sonnet',          engine:'claude', model:'sonnet', flags:''},
+  {id:'claude-haiku', label:'Claude · haiku',           engine:'claude', model:'haiku',  flags:''},
+  {id:'codex-xhigh',  label:'Codex · gpt-5.5 (xhigh)',  engine:'codex',  model:'gpt-5.5',flags:'-c model_reasoning_effort="xhigh"'},
+  {id:'codex',        label:'Codex · gpt-5.5',          engine:'codex',  model:'gpt-5.5',flags:''},
+  {id:'ollama',       label:'Ollama · local model',     engine:'ollama', model:'',       flags:''},
+  {id:'custom',       label:'Custom…',                  engine:'',       model:'',       flags:''},
+];
+const W = {
+  step:0, title:'', slug:'', question:'', language:'English',
+  A:{identity:'',champions:'',extra:''}, B:{identity:'',champions:'',extra:''},
+  materials:[{path:'',desc:'',backs:'A'},{path:'',desc:'',backs:'B'}],
+  criteria:[
+    {name:'Correctness / evidence-groundedness of the outcome',w:30},
+    {name:'Robustness and edge-case coverage',w:20},
+    {name:'Implementation and operational complexity',w:15},
+    {name:'Maintainability and extensibility',w:15},
+    {name:'Migration cost and risk from the current state',w:10},
+    {name:'Performance and cost at scale',w:10}],
+  cast:{M:{preset:'claude-opus',engine:'claude',model:'opus',flags:''},
+        A:{preset:'codex-xhigh',engine:'codex',model:'gpt-5.5',flags:'-c model_reasoning_effort="xhigh"'},
+        B:{preset:'claude-opus',engine:'claude',model:'opus',flags:''}},
+  port:8787, created:false
+};
+const WSTEPS = ['Basics','Sides','Materials','Criteria','Casting','Review & create'];
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+
+function openWizard(){ W.step=0; document.getElementById('wizard').classList.add('open'); renderWizard(); }
+function closeWizard(){ document.getElementById('wizard').classList.remove('open'); }
+
+function renderWizard(){
+  document.getElementById('wdots').innerHTML = WSTEPS.map((_,i)=>
+    `<span class="wdot ${i<W.step?'done':i===W.step?'cur':''}" title="${WSTEPS[i]}"></span>`).join('');
+  document.getElementById('wmsg').textContent='';
+  const back=document.getElementById('wback'), next=document.getElementById('wnext');
+  back.style.visibility = W.step===0?'hidden':'visible';
+  next.textContent = W.step===WSTEPS.length-1 ? (W.created?'Done':'Create debate') : 'Next →';
+  const s=document.getElementById('wstep'); const r=W;
+  if(W.step===0) s.innerHTML = `
+    <h4>1 · Basics</h4><p class="whint">What decision must this debate settle?</p>
+    <label class="f">Title</label>
+    <input type="text" id="w_title" value="${esc(r.title)}" placeholder="e.g. API gateway: Kong vs custom Envoy">
+    <label class="f">Slug (folder name)</label>
+    <input type="text" id="w_slug" value="${esc(r.slug)}" placeholder="auto-generated from title">
+    <label class="f">Decision question — the final document answers exactly this</label>
+    <textarea id="w_q" placeholder="Which option — X or Y — should we take as the basis, and what should the improvements be?">${esc(r.question)}</textarea>
+    <label class="f">Language</label><input type="text" id="w_lang" value="${esc(r.language)}">`;
+  if(W.step===1) s.innerHTML = `
+    <h4>2 · Sides</h4><p class="whint">Who argues what. Extra instructions are appended to each side's
+    brief in DEBATE-CONFIG.md — the role prompts read them automatically.</p>
+    <div class="wgrid2">${['A','B'].map(k=>`
+      <div class="sidebox ${k}"><b style="color:var(--${k.toLowerCase()})">Advocate ${k}</b>
+        <label class="f">Identity / stance</label>
+        <textarea id="w_${k}_id" placeholder="${k==='A'?'e.g. Embody the author of <doc>. Defend its philosophy with full conviction.':'e.g. Principal challenger. Stress-test every claim; advocate the alternative.'}">${esc(r[k].identity)}</textarea>
+        <label class="f">Champions (one line)</label>
+        <input type="text" id="w_${k}_ch" value="${esc(r[k].champions)}" placeholder="e.g. option X as the base">
+        <label class="f">Extra instructions (optional)</label>
+        <textarea id="w_${k}_ex" placeholder="anything this side must emphasise, avoid, or know">${esc(r[k].extra)}</textarea>
+      </div>`).join('')}</div>`;
+  if(W.step===2) s.innerHTML = `
+    <h4>3 · Materials</h4><p class="whint">Absolute paths on the machine where the sessions run.
+    Paths are checked live against this computer.</p>
+    ${r.materials.map((m,i)=>`
+      <div class="matrow">
+        <input type="text" class="mpath" data-i="${i}" value="${esc(m.path)}" placeholder="/abs/path/to/docs-or-file">
+        <input type="text" class="mdesc" data-i="${i}" value="${esc(m.desc)}" placeholder="what it is">
+        <select data-i="${i}" class="mbacks">
+          ${['A','B','shared'].map(v=>`<option ${m.backs===v?'selected':''}>${v}</option>`).join('')}</select>
+        <span class="vstat unk" id="vstat${i}">…</span>
+        <button class="xbtn" onclick="W.materials.splice(${i},1);renderWizard()">✕</button>
+      </div>`).join('')}
+    <button class="addbtn" onclick="grabStep();W.materials.push({path:'',desc:'',backs:'shared'});renderWizard()">+ add material</button>`;
+  if(W.step===3){
+    const sum=r.criteria.reduce((a,c)=>a+(+c.w||0),0);
+    s.innerHTML = `
+    <h4>4 · Decision criteria</h4><p class="whint">Weights should sum to 100. The moderator finalizes
+    these at gate G1; advocates may contest them in P1.</p>
+    ${r.criteria.map((c,i)=>`
+      <div class="critrow">
+        <input type="text" class="cname" data-i="${i}" value="${esc(c.name)}">
+        <input type="number" class="cw" data-i="${i}" value="${c.w}" min="0" max="100">
+        <button class="xbtn" onclick="grabStep();W.criteria.splice(${i},1);renderWizard()">✕</button>
+      </div>`).join('')}
+    <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
+      <button class="addbtn" onclick="grabStep();W.criteria.push({name:'',w:0});renderWizard()">+ add criterion</button>
+      <span class="sumbadge ${sum===100?'ok':'bad'}" id="csum">Σ ${sum}</span></div>`;
+  }
+  if(W.step===4) s.innerHTML = `
+    <h4>5 · Casting</h4><p class="whint">Engine + model per role. Ollama runs local models via
+    <code>codex --oss</code> (needs <code>ollama serve</code> + the model pulled). Each CLI must be
+    authenticated before launch — see README → Prerequisites.</p>
+    <div class="castrow" style="color:var(--dim);font-size:11px"><span></span><span>preset</span><span>model</span><span>extra flags</span></div>
+    ${['M','A','B'].map(k=>{const c=r.cast[k];return `
+      <div class="castrow"><span class="rl">${k==='M'?'Moderator':'Advocate '+k}</span>
+        <select id="w_cast_${k}" data-k="${k}">${PRESETS.map(p=>`<option value="${p.id}" ${c.preset===p.id?'selected':''}>${p.label}</option>`).join('')}</select>
+        <input type="text" id="w_model_${k}" value="${esc(c.model)}" placeholder="model id">
+        <input type="text" id="w_flags_${k}" value="${esc(c.flags)}" placeholder="extra CLI flags"></div>`;}).join('')}
+    <label class="f">Dashboard port</label>
+    <input type="number" id="w_port" value="${r.port}" style="max-width:140px">`;
+  if(W.step===5){
+    if(W.created){
+      s.innerHTML = `<h4>6 · Created ✓</h4>
+        <div class="launchok">Debate <b>${esc(r.slug)}</b> is scaffolded and ready.
+        <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="hbtn primary" id="wlaunch">🚀 Launch sessions now</button>
+          <a class="hbtn" style="text-decoration:none" href="?debate=${encodeURIComponent(r.slug)}">open its dashboard →</a></div>
+        <div id="wlaunchmsg" style="margin-top:10px;font-size:12px;color:var(--muted)"></div>
+        <div style="margin-top:10px;font-size:12px;color:var(--dim)">Or from a terminal:
+        <code>./bin/run-debate.sh ${esc(r.slug)}</code></div></div>`;
+      const lb=document.getElementById('wlaunch');
+      if(lb) lb.onclick = async ()=>{
+        lb.disabled=true; const msg=document.getElementById('wlaunchmsg'); msg.textContent='launching…';
+        try{
+          const res=await fetch('/api/launch',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({slug:r.slug})});
+          const j=await res.json();
+          msg.textContent = j.ok ? '✔ '+j.note : '✗ '+(j.error||'launch failed');
+        }catch(e){ msg.textContent='✗ '+e.message; }
+        lb.disabled=false;
+      };
+    } else {
+      s.innerHTML = `<h4>6 · Review</h4>
+        <p class="whint">These two files will be written to <code>debates/${esc(r.slug)}/</code>
+        along with the protocol, prompts, and empty run state.</p>
+        <label class="f">DEBATE-CONFIG.md</label><pre class="preview">${esc(genConfigMd())}</pre>
+        <label class="f">run.conf</label><pre class="preview">${esc(genRunConf())}</pre>`;
+    }
+  }
+  if(W.step===2) W.materials.forEach((m,i)=>{ if(m.path) checkPath(i); });
+  document.querySelectorAll('#wstep .mpath').forEach(inp=>{
+    inp.addEventListener('change',()=>{ grabStep(); checkPath(+inp.dataset.i); });
+  });
+  document.querySelectorAll('#wstep select[id^=w_cast_]').forEach(sel=>{
+    sel.addEventListener('change',()=>{
+      const p=PRESETS.find(x=>x.id===sel.value)||PRESETS[0]; const k=sel.dataset.k;
+      if(p.id!=='custom'){
+        document.getElementById('w_model_'+k).value=p.model;
+        document.getElementById('w_flags_'+k).value=p.flags;
+      }
+      if(p.id==='ollama') document.getElementById('w_model_'+k).placeholder='e.g. llama3.3, qwen2.5-coder:32b';
+    });
+  });
+  const t=document.getElementById('w_title');
+  if(t) t.addEventListener('input',()=>{
+    const sl=document.getElementById('w_slug');
+    if(!sl.dataset.touched) sl.value=t.value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60);
+  });
+  const sl=document.getElementById('w_slug');
+  if(sl) sl.addEventListener('input',()=>{ sl.dataset.touched=1; });
+}
+
+async function checkPath(i){
+  const el=document.getElementById('vstat'+i); if(!el) return;
+  const p=(W.materials[i]||{}).path||''; if(!p){el.textContent='…';el.className='vstat unk';return;}
+  el.textContent='checking…'; el.className='vstat unk';
+  try{
+    const r=await fetch('/api/validate-path',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({path:p})});
+    const j=await r.json();
+    if(j.exists){ el.textContent='✓ '+(j.type==='dir'?`dir · ${j.files} files`:'file');
+      el.className='vstat ok'; }
+    else { el.textContent='✗ '+(j.note||'not found'); el.className='vstat bad'; }
+  }catch(e){ el.textContent='? server'; el.className='vstat bad'; }
+}
+
+function grabStep(){ // pull current DOM values into W
+  const g=id=>{const e=document.getElementById(id);return e?e.value:null;};
+  if(W.step===0){
+    if(g('w_title')!==null){ W.title=g('w_title'); W.slug=g('w_slug'); W.question=g('w_q'); W.language=g('w_lang'); }
+  }
+  if(W.step===1) ['A','B'].forEach(k=>{
+    if(g(`w_${k}_id`)!==null){ W[k].identity=g(`w_${k}_id`); W[k].champions=g(`w_${k}_ch`); W[k].extra=g(`w_${k}_ex`); }
+  });
+  if(W.step===2){
+    document.querySelectorAll('#wstep .matrow').forEach((row,i)=>{
+      const m=W.materials[i]; if(!m) return;
+      m.path=row.querySelector('.mpath').value.trim();
+      m.desc=row.querySelector('.mdesc').value.trim();
+      m.backs=row.querySelector('.mbacks').value;
+    });
+  }
+  if(W.step===3){
+    document.querySelectorAll('#wstep .critrow').forEach((row,i)=>{
+      const c=W.criteria[i]; if(!c) return;
+      c.name=row.querySelector('.cname').value.trim(); c.w=+row.querySelector('.cw').value||0;
+    });
+  }
+  if(W.step===4){
+    ['M','A','B'].forEach(k=>{
+      const sel=g('w_cast_'+k); if(sel===null) return;
+      const p=PRESETS.find(x=>x.id===sel)||PRESETS[0];
+      W.cast[k]={preset:sel,
+        engine:p.id==='custom'?(W.cast[k].engine||'claude'):p.engine,
+        model:g('w_model_'+k).trim(), flags:g('w_flags_'+k).trim()};
+      if(p.id==='custom' && !['claude','codex','ollama'].includes(W.cast[k].engine))
+        W.cast[k].engine = /gpt|oss/.test(W.cast[k].model)?'codex':'claude';
+    });
+    W.port=+g('w_port')||8787;
+  }
+}
+
+function validateStep(){
+  if(W.step===0){
+    if(!W.question.trim()) return 'Decision question is required.';
+    if(!/^[A-Za-z0-9._-]{1,128}$/.test(W.slug)) return 'Slug must be letters/digits/._- only.';
+  }
+  if(W.step===1){
+    if(!W.A.identity.trim()||!W.B.identity.trim()) return 'Both sides need an identity/stance.';
+    if(!W.A.champions.trim()||!W.B.champions.trim()) return 'Both sides need a one-line "champions".';
+  }
+  if(W.step===2 && !W.materials.some(m=>m.path)) return 'Add at least one material path.';
+  if(W.step===3){
+    const sum=W.criteria.reduce((a,c)=>a+(+c.w||0),0);
+    if(sum!==100) return `Criteria weights sum to ${sum}, need 100.`;
+    if(W.criteria.some(c=>!c.name.trim())) return 'Every criterion needs a name.';
+  }
+  if(W.step===4){
+    for(const k of ['M','A','B']) if(!W.cast[k].model.trim()) return `${k==='M'?'Moderator':'Advocate '+k}: model id required.`;
+  }
+  return '';
+}
+
+function genConfigMd(){
+  const mats=W.materials.filter(m=>m.path);
+  const dirsNote='Agents read materials in place. Nobody writes into these directories.';
+  const side=k=>`## Side ${k}\n\n- **Identity/stance:** ${W[k].identity.trim()}\n`+
+    `- **Champions:** ${W[k].champions.trim()}\n`+
+    `- **Session:** ${W.cast[k].engine} — ${W.cast[k].model}${W.cast[k].flags?' ('+W.cast[k].flags+')':''}\n`+
+    (W[k].extra.trim()?`- **Additional guidance:** ${W[k].extra.trim()}\n`:'');
+  return `# DEBATE CONFIG — ${W.title.trim()||W.slug}
+
+## Decision question
+
+${W.question.trim()}
+
+## Source materials
+
+| # | Path | What it is | Primarily backs |
+|---|------|-----------|-----------------|
+${mats.map((m,i)=>`| ${i+1} | ${m.path} | ${m.desc||'—'} | ${m.backs==='shared'?'shared':'Side '+m.backs} |`).join('\n')}
+
+${dirsNote}
+
+${side('A')}
+${side('B')}
+## Moderator
+
+- **Session:** ${W.cast.M.engine} — ${W.cast.M.model}${W.cast.M.flags?' ('+W.cast.M.flags+')':''}
+
+## Proposed decision criteria (moderator finalizes in P0; advocates may contest in P1)
+
+${W.criteria.map((c,i)=>`${i+1}. ${c.name.trim()} — weight ${c.w}`).join('\n')}
+
+## Process settings
+
+- **Mode:** autopilot (file polling per PROTOCOL §4); relay fallback documented in README
+- **Phases:** standard P0–P5; moderator may extend to ≤10 total (PROTOCOL §7)
+- **Output:** \`output/UNIFIED-VISION.md\` per PROTOCOL §9
+- **Language:** ${W.language.trim()||'English'}
+`;
+}
+
+function genRunConf(){
+  const sq=v=>v===''?"''":("'"+String(v).replace(/'/g,"'\\''")+"'");
+  const dirs=[...new Set(W.materials.filter(m=>m.path).map(m=>{
+    const p=m.path.replace(/\/+$/,'');
+    return /\.[A-Za-z0-9]{1,8}$/.test(p)?p.replace(/\/[^/]+$/,''):p; // file → parent dir
+  }))].join(' ');
+  const role=k=>`${k}_ENGINE=${W.cast[k].engine}\n${k}_MODEL=${sq(W.cast[k].model)}\n${k}_FLAGS=${sq(W.cast[k].flags)}`;
+  return `# run.conf — generated by the dashboard wizard (bash syntax)
+# ENGINE: claude | codex | ollama (ollama = local model via \`codex --oss\`)
+
+${role('A')}
+
+${role('B')}
+
+${role('M')}
+
+MATERIALS_DIRS=${sq(dirs)}
+
+CLAUDE_COMMON_FLAGS='--permission-mode acceptEdits'
+CODEX_COMMON_FLAGS='--sandbox workspace-write'
+
+DASH_PORT=${W.port}
+`;
+}
+
+document.getElementById('wback').onclick=()=>{ grabStep(); if(W.step>0){W.step--; renderWizard();} };
+document.getElementById('wnext').onclick=async ()=>{
+  grabStep();
+  const err=validateStep();
+  if(err){ document.getElementById('wmsg').textContent=err; return; }
+  if(W.step<WSTEPS.length-1){ W.step++; renderWizard(); return; }
+  if(W.created){ closeWizard(); return; }
+  const btn=document.getElementById('wnext'); btn.disabled=true;
+  document.getElementById('wmsg').textContent='creating…';
+  try{
+    const r=await fetch('/api/debates',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({slug:W.slug,config_md:genConfigMd(),run_conf:genRunConf()})});
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.error||'create failed');
+    W.created=true; renderWizard(); initSwitcher();
+  }catch(e){ document.getElementById('wmsg').textContent='✗ '+e.message; }
+  btn.disabled=false;
+};
 </script>
 </body>
 </html>
