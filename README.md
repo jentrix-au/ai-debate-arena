@@ -61,10 +61,23 @@ verbatim, not erased. Full rules: [PROTOCOL.md](PROTOCOL.md).
 | tmux *(optional, recommended)* | one-window launch + auto prompt injection | `brew install tmux` |
 
 You only need the CLIs you actually cast (e.g. an all-Claude debate needs no Codex).
-Each CLI must be authenticated once before first use: run `claude` and complete login;
-run `codex login`. Subscriptions/plans are whatever your accounts have — models are
-chosen per debate in `run.conf`. The dashboard loads `marked.js` from a CDN for markdown
-rendering; without internet it degrades to plain-text view.
+
+**Authentication is required before first use** — every Claude Code and Codex CLI on
+the machine must be authorized or the sessions will fail at launch:
+
+- **Claude Code:** run `claude`; on first launch it opens a browser to log in with your
+  Claude.ai account (Pro/Max subscription) or Console API key. For non-interactive
+  environments use `claude setup-token`. Re-auth: `/logout` in-session. Docs:
+  [Claude Code → Authentication](https://code.claude.com/docs/en/authentication).
+- **Codex CLI:** run `codex login`; it opens a browser for the ChatGPT OAuth flow
+  (`--device-auth` for headless machines; API-key and access-token sign-in also
+  supported). Check with `codex login status`. Docs:
+  [Codex → Authentication](https://developers.openai.com/codex/auth).
+- **Ollama engine:** no account — just `ollama serve` running and the model pulled.
+
+Subscriptions/plans are whatever your accounts have — models are chosen per debate in
+`run.conf`. The dashboard loads `marked.js` from a CDN for markdown rendering; without
+internet it degrades to plain-text view.
 
 ## Install
 
