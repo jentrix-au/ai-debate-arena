@@ -544,9 +544,9 @@ const PRESETS = [
   {id:'custom',       label:'Custom…',                  engine:'',       model:'',       flags:''},
 ];
 const W = {
-  step:0, title:'', slug:'', question:'', language:'English',
+  step:0, title:'', slug:'', question:'', outputType:'Implementation basis', language:'English',
   A:{identity:'',champions:'',extra:''}, B:{identity:'',champions:'',extra:''},
-  materials:[{path:'',desc:'',backs:'A'},{path:'',desc:'',backs:'B'}],
+  materials:[{path:'',desc:'',auth:'primary',backs:'A'},{path:'',desc:'',auth:'primary',backs:'B'}],
   criteria:[
     {name:'Correctness / evidence-groundedness of the outcome',w:30},
     {name:'Robustness and edge-case coverage',w:20},
@@ -579,9 +579,13 @@ function renderWizard(){
     <input type="text" id="w_title" value="${esc(r.title)}" placeholder="e.g. API gateway: Kong vs custom Envoy">
     <label class="f">Slug (folder name)</label>
     <input type="text" id="w_slug" value="${esc(r.slug)}" placeholder="auto-generated from title">
-    <label class="f">Decision question — the final document answers exactly this</label>
-    <textarea id="w_q" placeholder="Which option — X or Y — should we take as the basis, and what should the improvements be?">${esc(r.question)}</textarea>
-    <label class="f">Language</label><input type="text" id="w_lang" value="${esc(r.language)}">`;
+	    <label class="f">Decision question — the final document answers exactly this</label>
+	    <textarea id="w_q" placeholder="Which option — X or Y — should we take as the basis, and what should the improvements be?">${esc(r.question)}</textarea>
+	    <label class="f">Desired output type</label>
+	    <select id="w_output">
+	      ${['Recommendation only','Implementation basis','Production stop/go'].map(v=>`<option ${r.outputType===v?'selected':''}>${v}</option>`).join('')}
+	    </select>
+	    <label class="f">Language</label><input type="text" id="w_lang" value="${esc(r.language)}">`;
   if(W.step===1) s.innerHTML = `
     <h4>2 · Sides</h4><p class="whint">Who argues what. Extra instructions are appended to each side's
     brief in DEBATE-CONFIG.md — the role prompts read them automatically.</p>
@@ -599,14 +603,16 @@ function renderWizard(){
     Paths are checked live against this computer.</p>
     ${r.materials.map((m,i)=>`
       <div class="matrow">
-        <input type="text" class="mpath" data-i="${i}" value="${esc(m.path)}" placeholder="/abs/path/to/docs-or-file">
-        <input type="text" class="mdesc" data-i="${i}" value="${esc(m.desc)}" placeholder="what it is">
-        <select data-i="${i}" class="mbacks">
-          ${['A','B','shared'].map(v=>`<option ${m.backs===v?'selected':''}>${v}</option>`).join('')}</select>
+	        <input type="text" class="mpath" data-i="${i}" value="${esc(m.path)}" placeholder="/abs/path/to/docs-or-file">
+	        <input type="text" class="mdesc" data-i="${i}" value="${esc(m.desc)}" placeholder="what it is">
+	        <select data-i="${i}" class="mauth">
+	          ${['primary','executed','human-decision','generated-synthesis','guidance'].map(v=>`<option ${m.auth===v?'selected':''}>${v}</option>`).join('')}</select>
+	        <select data-i="${i}" class="mbacks">
+	          ${['A','B','shared'].map(v=>`<option ${m.backs===v?'selected':''}>${v}</option>`).join('')}</select>
         <span class="vstat unk" id="vstat${i}">…</span>
         <button class="xbtn" onclick="W.materials.splice(${i},1);renderWizard()">✕</button>
       </div>`).join('')}
-    <button class="addbtn" onclick="grabStep();W.materials.push({path:'',desc:'',backs:'shared'});renderWizard()">+ add material</button>`;
+	    <button class="addbtn" onclick="grabStep();W.materials.push({path:'',desc:'',auth:'primary',backs:'shared'});renderWizard()">+ add material</button>`;
   if(W.step===3){
     const sum=r.criteria.reduce((a,c)=>a+(+c.w||0),0);
     s.innerHTML = `
@@ -703,7 +709,7 @@ async function checkPath(i){
 function grabStep(){ // pull current DOM values into W
   const g=id=>{const e=document.getElementById(id);return e?e.value:null;};
   if(W.step===0){
-    if(g('w_title')!==null){ W.title=g('w_title'); W.slug=g('w_slug'); W.question=g('w_q'); W.language=g('w_lang'); }
+    if(g('w_title')!==null){ W.title=g('w_title'); W.slug=g('w_slug'); W.question=g('w_q'); W.outputType=g('w_output'); W.language=g('w_lang'); }
   }
   if(W.step===1) ['A','B'].forEach(k=>{
     if(g(`w_${k}_id`)!==null){ W[k].identity=g(`w_${k}_id`); W[k].champions=g(`w_${k}_ch`); W[k].extra=g(`w_${k}_ex`); }
@@ -713,6 +719,7 @@ function grabStep(){ // pull current DOM values into W
       const m=W.materials[i]; if(!m) return;
       m.path=row.querySelector('.mpath').value.trim();
       m.desc=row.querySelector('.mdesc').value.trim();
+      m.auth=row.querySelector('.mauth').value;
       m.backs=row.querySelector('.mbacks').value;
     });
   }
@@ -770,13 +777,28 @@ function genConfigMd(){
 
 ${W.question.trim()}
 
+## Desired output type
+
+**${W.outputType}**
+
+${W.outputType==='Recommendation only'
+  ? 'The final may choose a direction, but does not authorize implementation.'
+  : W.outputType==='Production stop/go'
+    ? 'The final must define what is allowed now, what is blocked, and the exact evidence required to scale.'
+    : 'The final must include concrete gates, owners, artifacts, acceptance tests, baselines, fixtures, and stop/go rules.'}
+
 ## Source materials
 
-| # | Path | What it is | Primarily backs |
-|---|------|-----------|-----------------|
-${mats.map((m,i)=>`| ${i+1} | ${m.path} | ${m.desc||'—'} | ${m.backs==='shared'?'shared':'Side '+m.backs} |`).join('\n')}
+| # | Path | What it is | Evidence authority | Primarily backs |
+|---|------|-----------|--------------------|-----------------|
+${mats.map((m,i)=>`| ${i+1} | ${m.path} | ${m.desc||'—'} | ${m.auth||'primary'} | ${m.backs==='shared'?'shared':'Side '+m.backs} |`).join('\n')}
 
 ${dirsNote}
+
+Authority note: generated plans, debate artifacts, agent notes, summaries, and consensus
+files may guide investigation, but they are not authority for source, schema, behavior,
+verification, rollout, or completion claims unless this debate is explicitly about those
+generated artifacts.
 
 ${side('A')}
 ${side('B')}
@@ -787,6 +809,18 @@ ${side('B')}
 ## Proposed decision criteria (moderator finalizes in P0; advocates may contest in P1)
 
 ${W.criteria.map((c,i)=>`${i+1}. ${c.name.trim()} — weight ${c.w}`).join('\n')}
+
+## Readiness floor
+
+If the final answer claims implementation or production readiness, it must name:
+
+- required gates and stop/go rules;
+- owner roles;
+- exact files/scripts/schemas/reports/fixtures to create or change, or \`[TBD-BLOCKER]\`;
+- acceptance tests and pass/fail thresholds;
+- source-critical claim classifier;
+- baseline/workload/reviewer or grader for comparison;
+- operator exception limits and audit trail.
 
 ## Process settings
 

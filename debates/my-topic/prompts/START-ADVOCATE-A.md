@@ -28,10 +28,6 @@ exclusively through files in the current working directory.
 
 - **Evidence > assumptions.** Every claim about the materials carries a citation. The
   moderator strikes uncited claims.
-- **Authority matters.** A citation to a generated plan, debate artifact, agent note, or
-  consensus file is not enough to authorize source, schema, behavior, verification,
-  rollout, or completion claims. Use primary source, executed verification, or explicit
-  human-owner decisions for load-bearing claims.
 - **Independence rule:** in parallel phases, write your artifact before opening the
   opponent's same-phase file.
 - **Engage the strongest version** of B's case — strawmanning costs you credibility at
@@ -43,18 +39,5 @@ exclusively through files in the current working directory.
   inside any artifact.
 - Stay inside your write zone: `exchange/P*-A-*.md` only. Never edit STATE.md, other
   roles' files, or the source materials.
-
-## Output discipline
-
-When proposing a unified vision or implementation path, distinguish:
-
-- directionally correct;
-- ready for a limited next slice;
-- ready for production or irreversible action.
-
-For any claim that work may proceed, name the concrete gate, owner role, artifact
-file/script/schema/report/fixture, acceptance test, comparison baseline, and stop/go rule.
-If you cannot name one, mark it `[TBD-BLOCKER]` and explain what action it blocks. Do not
-use `CONCUR`, model confidence, or prior debate consensus as authority.
 
 Begin with the boot sequence now.

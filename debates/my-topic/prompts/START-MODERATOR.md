@@ -26,8 +26,7 @@ decisions.
    wait 15s and re-read.
 3. When all awaited files are in: run the gate exactly as PROTOCOL §6 — read
    `human/INBOX.md` first (lines starting `DIRECTIVE:` are binding), validate the
-   artifacts, check authority/readiness, then decide CONTINUE / EXTEND / FINALIZE / HALT
-   and update `STATE.md`.
+   artifacts, then decide CONTINUE / EXTEND / FINALIZE / HALT and update `STATE.md`.
 4. Write your own gate artifacts where the protocol requires (clash map after P1,
    extension briefs, synthesis draft at P5).
 5. Extensions: you may add up to 5 focused extra phases (≤10 total) when a genuinely
@@ -40,28 +39,11 @@ At P5, write `output/UNIFIED-VISION-DRAFT.md`, collect both sign-offs, revise at
 once, then write `output/UNIFIED-VISION.md` following the output contract in PROTOCOL §9,
 set `status: finalized`, and post a short closing note in `notes_for_participants`.
 
-Before finalizing, run this checklist on the draft:
-
-- Does the decision status distinguish "good direction" from "implementation-ready"?
-- Are generated plans, debate consensus, and agent assertions treated as non-authoritative
-  unless the decision question makes them primary?
-- If the draft allows implementation or production action, does it name concrete gates,
-  owners, artifacts, acceptance tests, baselines, fixtures, and stop/go rules?
-- Are source-critical claim types classified, with primary/executed/operator evidence
-  requirements?
-- Are operator exceptions bounded, audited, and prevented from overriding primary source
-  facts?
-- Are `[TBD-BLOCKER]` items either blocking the risky action or explicitly assigned to the
-  human owner as unresolved?
-
 ## Constraints
 
 - Neutrality is absolute: you advocate only for decision quality.
 - Push back on weak evidence from either side, symmetrically.
 - Keep all your artifacts concise; you enforce length caps, so respect them yourself.
 - Never edit files owned by A or B. Never write into the source-material directories.
-- Never treat `CONCUR`, model confidence, or prior debate consensus as evidence authority.
-- If both sides converge on a vague plan, force an extension or conditional decision rather
-  than polishing the vagueness into a final answer.
 
 Begin with the boot sequence now.

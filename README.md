@@ -47,8 +47,13 @@ delivered only when it ends with an `<!-- END <ROLE> P<n> -->` marker.
 Standard run is 6 gated steps — **P0 brief → P1 positions → P2 rebuttals → P3 forced
 steelman → P4 convergence proposals → P5 synthesis with CONCUR/OBJECT sign-off** — and
 the moderator may extend to 10 phases total when a promising path emerges. Every factual
-claim must cite the source materials (`path §section`); surviving dissent is recorded
-verbatim, not erased. Full rules: [PROTOCOL.md](PROTOCOL.md).
+claim must cite the source materials (`path §section`), and cited material is classified by
+authority: primary source, executed verification, and explicit human-owner decisions outrank
+generated synthesis, guidance, agent notes, or debate consensus. If the output is an
+implementation basis or production stop/go decision, the final must name concrete gates,
+owners, artifacts, acceptance tests, baselines, fixtures, and stop/go rules; otherwise it
+must be marked conditional or revise-first. Surviving dissent is recorded verbatim, not
+erased. Full rules: [PROTOCOL.md](PROTOCOL.md).
 
 ## Prerequisites
 
@@ -92,12 +97,12 @@ No build step, no package install — scripts are bash + Python stdlib.
 ## Configure a debate
 
 **Easiest — the dashboard wizard:** start the server (`./bin/serve.sh`), open the
-dashboard, click **✚ New debate**. Six steps: basics (title/slug/decision question) →
-sides (identity, champions, optional extra instructions per side) → materials (absolute
-paths with live exists-on-disk validation) → criteria (weights with a Σ=100 check) →
-casting (per-role presets incl. ollama) → review of the exact generated files. Finish
-with **🚀 Launch sessions now** straight from the browser, or copy the terminal command.
-A header dropdown switches between debates.
+dashboard, click **✚ New debate**. Six steps: basics (title/slug/decision question/output
+type) → sides (identity, champions, optional extra instructions per side) → materials
+(absolute paths with live exists-on-disk validation plus evidence-authority classification)
+→ criteria (weights with a Σ=100 check) → casting (per-role presets incl. ollama) → review
+of the exact generated files. Finish with **🚀 Launch sessions now** straight from the
+browser, or copy the terminal command. A header dropdown switches between debates.
 
 **Or from the CLI:**
 
@@ -107,9 +112,10 @@ A header dropdown switches between debates.
 
 Edit two files in `debates/my-topic/`:
 
-1. **`DEBATE-CONFIG.md`** — the substance: decision question, source-material paths
-   (absolute paths on the machine where sessions run), Side A / Side B identities and
-   stances, proposed decision criteria. This is what the agents read.
+1. **`DEBATE-CONFIG.md`** — the substance: decision question, desired output type,
+   source-material paths and authority classes (absolute paths on the machine where
+   sessions run), Side A / Side B identities and stances, proposed decision criteria, and
+   readiness floor. This is what the agents read.
 2. **`run.conf`** — the machinery: per-role `ENGINE` (`claude`|`codex`|`ollama` — the
    latter runs local models via `codex --oss`), `MODEL`, extra flags (e.g.
    `-c model_reasoning_effort="xhigh"`), `MATERIALS_DIRS` (claude gets `--add-dir` for
